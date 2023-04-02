@@ -25,8 +25,17 @@ class Environment(BaseEnvironment):
         self.time = 0
         self.max_time = None
 
+    def get_full_obs(self):
+        infos = ['weighted_positive_score','weighted_neutral_score','weighted_negative_score',
+        'total', 'market_value']
+
+        return [self.data[key][self.time] for key in infos]
+    
     def get_obs(self):
-        return {key:self.data[key][self.time] for key in self.data.keys()}
+        infos = ['weighted_positive_score','weighted_neutral_score','weighted_negative_score',
+        'total']
+
+        return [self.data[key][self.time] for key in infos]
     
     def env_init(self, env_info={}):
         """Setup for the environment called when the experiment first starts.
@@ -37,9 +46,12 @@ class Environment(BaseEnvironment):
         """
         self.max_time= env_info['max']
         self.data = env_info['data']
-        local_observation = self.get_obs()
+        local_observation = []
+        for _ in range(5):
+            local_observation += [self.get_full_obs()]
+            self.time +=1
 
-        self.reward_obs_term = (0.0, local_observation, False)
+        self.reward_obs_term = (0.0, np.array(local_observation), self.get_obs(), False)
 
 
     def env_start(self):
@@ -51,8 +63,8 @@ class Environment(BaseEnvironment):
         """
         return self.reward_obs_term
     
-    def NUPL(self,action):
-        return 0 
+    def NUPL(self,action,current):
+        return  (current - action*current)/current
 
     def env_step(self, action):
         """A step taken by the environment.
@@ -64,16 +76,16 @@ class Environment(BaseEnvironment):
             (float, state, Boolean): a tuple of the reward, state observation,
                 and boolean indicating if it's terminal.
         """
+        current = self.get_full_obs()[-1]
+        reward = self.NUPL(action,current)
         self.time += 1
-        reward = self.NUPL(action)
 
         obs = self.get_obs()
         
         if self.time != self.max_time:
-            self.reward_obs_term = (reward, obs, False)
+            self.reward_obs_term = (reward,obs, False)
         else:
             self.reward_obs_term = (reward, obs, True)
-
         return self.reward_obs_term
 
     def env_cleanup(self):
