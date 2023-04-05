@@ -24,6 +24,8 @@ rl_glue.rl_start()
 
 num_steps = 11
 
+total_nupl = []
+actions = np.zeros(4)
 for i in range(num_steps):
         reward, obs, action, done = rl_glue.rl_step()
         print("iteration:",i)
@@ -31,6 +33,9 @@ for i in range(num_steps):
         print("New observation:", obs[0], obs[1])
         print("Agent Portfolio:", action[0])
         print("Action taken:", action[1])
+
+        total_nupl.append(reward)
+        actions = np.vstack((actions,action[1]))
         if done:
                 break
 
