@@ -27,7 +27,7 @@ class Environment(BaseEnvironment):
 
     def get_full_obs(self):
         infos = ['weighted_positive_score','weighted_neutral_score','weighted_negative_score',
-        'total', 'market_value']
+        'total', 'Bitcoin','BTC','BNB','ETH']
 
         return [self.data[key][self.time] for key in infos]
     
@@ -54,18 +54,52 @@ class Environment(BaseEnvironment):
         self.reward_obs_term = (0.0, np.array(local_observation), self.get_obs(), False)
 
 
+
     def env_start(self):
         """The first method called when the experiment starts, called before the
         agent starts.
 
         Returns:
-            The first state observation from the environment.
+            The first state observation from the environment. Gives 5 points to agent
         """
         return self.reward_obs_term
     
-    def NUPL(self,action,current):
-        return  (current - action*current)/current
+    def NUPL(self,portfolio,current):
+        """Method to get NUPLS fro each crypto according to agent portfolio
+        Args:
+            portfolio : agent portfolio
+            current : the current market value for each crypto
+        Returns:
+            NUPLs
+        """
+        NUPLs = []
+        for i,crypto in enumerate(['Bitcoin','BTC','BNB','ETH']):
 
+            total = sum([nb for nb , value in portfolio[crypto]])
+            if portfolio[crypto] != []:
+                NUPLs.append(sum([(current[i] - value)*nb for nb , value in portfolio[crypto]]) / total*current[i])
+            else:
+                NUPLs.append(0)
+        return NUPLs
+    
+    def update_agent_portfolio(self,market_values,action,portfolio,cash):
+        """Method update virtually the agent portfolio according to the action he chose
+        Args:
+            portfolio : agent portfolio
+            market_values : the current market value for each crypto
+            action: the actions taken by the agent 
+            cash : agent cash for teh buy action
+
+        Returns:
+            portfolio 
+        """
+        for i,crypto in enumerate([ 'Bitcoin','BTC','BNB','ETH']):
+            if action[i] ==1:
+                portfolio[crypto].append((cash/market_values[i] ,market_values[i]))
+            if action[i] == 2:
+                portfolio[crypto] = []
+        return portfolio
+    
     def env_step(self, action):
         """A step taken by the environment.
 
@@ -76,16 +110,18 @@ class Environment(BaseEnvironment):
             (float, state, Boolean): a tuple of the reward, state observation,
                 and boolean indicating if it's terminal.
         """
-        current = self.get_full_obs()[-1]
-        reward = self.NUPL(action,current)
+        current = self.get_full_obs()[-4:] # get the value the agent tried to predict
+        portfolio , action_per_crypto , cash = action
+        portfolio = self.update_agent_portfolio(current,action_per_crypto,portfolio,cash)
+        reward = sum(self.NUPL(portfolio,current))
         self.time += 1
 
         obs = self.get_obs()
         
         if self.time != self.max_time:
-            self.reward_obs_term = (reward,obs, False)
+            self.reward_obs_term = (reward,(obs, current), False)
         else:
-            self.reward_obs_term = (reward, obs, True)
+            self.reward_obs_term = (reward, (obs, current), True)
         return self.reward_obs_term
 
     def env_cleanup(self):
