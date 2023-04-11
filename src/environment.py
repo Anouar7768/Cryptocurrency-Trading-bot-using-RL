@@ -4,6 +4,7 @@ from RLGlue.environment import BaseEnvironment
 
 import numpy as np
 
+
 class Environment(BaseEnvironment):
     """Implements the environment for an RLGlue environment
 
@@ -26,17 +27,15 @@ class Environment(BaseEnvironment):
         self.max_time = None
 
     def get_full_obs(self):
-        infos = ['weighted_positive_score','weighted_neutral_score','weighted_negative_score',
-        'total', 'Bitcoin','BTC','BNB','ETH']
+        infos = ['BTC', 'BNB', 'ETH'] ##TODO add real prices of cryptos on the same row
 
         return [self.data[key][self.time] for key in infos]
-    
+
     def get_obs(self):
-        infos = ['weighted_positive_score','weighted_neutral_score','weighted_negative_score',
-        'total']
+        infos = ['BTC', 'BNB', 'ETH']
 
         return [self.data[key][self.time] for key in infos]
-    
+
     def env_init(self, env_info={}):
         """Setup for the environment called when the experiment first starts.
 
@@ -44,16 +43,14 @@ class Environment(BaseEnvironment):
             Initialize a tuple with the reward, first state observation, boolean
             indicating if it's terminal.
         """
-        self.max_time= env_info['max']
+        self.max_time = env_info['max']
         self.data = env_info['data']
         local_observation = []
         for _ in range(5):
             local_observation += [self.get_full_obs()]
-            self.time +=1
+            self.time += 1
 
         self.reward_obs_term = (0.0, np.array(local_observation), self.get_obs(), False)
-
-
 
     def env_start(self):
         """The first method called when the experiment starts, called before the
@@ -63,8 +60,8 @@ class Environment(BaseEnvironment):
             The first state observation from the environment. Gives 5 points to agent
         """
         return self.reward_obs_term
-    
-    def NUPL(self,portfolio,current):
+
+    def NUPL(self, portfolio, current):
         """Method to get NUPLS fro each crypto according to agent portfolio
         Args:
             portfolio : agent portfolio
@@ -73,16 +70,15 @@ class Environment(BaseEnvironment):
             NUPLs
         """
         NUPLs = []
-        for i,crypto in enumerate(['Bitcoin','BTC','BNB','ETH']):
-
-            total = sum([nb for nb , value in portfolio[crypto]])
+        for i, crypto in enumerate(['BTC', 'BNB', 'ETH']):
+            total = sum([nb for nb, value in portfolio[crypto]])
             if portfolio[crypto] != []:
-                NUPLs.append(sum([(current[i] - value)*nb for nb , value in portfolio[crypto]]) / total*current[i])
+                NUPLs.append(sum([(current[i] - value) * nb for nb, value in portfolio[crypto]]) / total * current[i])
             else:
                 NUPLs.append(0)
         return NUPLs
-    
-    def update_agent_portfolio(self,market_values,action,portfolio,cash):
+
+    def update_agent_portfolio(self, market_values, action, portfolio, cash):
         """Method update virtually the agent portfolio according to the action he chose
         Args:
             portfolio : agent portfolio
@@ -93,13 +89,13 @@ class Environment(BaseEnvironment):
         Returns:
             portfolio 
         """
-        for i,crypto in enumerate([ 'Bitcoin','BTC','BNB','ETH']):
-            if action[i] ==1:
-                portfolio[crypto].append((cash/market_values[i] ,market_values[i]))
+        for i, crypto in enumerate(['BTC', 'BNB', 'ETH']):
+            if action[i] == 1:
+                portfolio[crypto].append((cash / market_values[i], market_values[i]))
             if action[i] == 2:
                 portfolio[crypto] = []
         return portfolio
-    
+
     def env_step(self, action):
         """A step taken by the environment.
 
@@ -110,16 +106,16 @@ class Environment(BaseEnvironment):
             (float, state, Boolean): a tuple of the reward, state observation,
                 and boolean indicating if it's terminal.
         """
-        current = self.get_full_obs()[-4:] # get the value the agent tried to predict
-        portfolio , action_per_crypto , cash = action
-        portfolio = self.update_agent_portfolio(current,action_per_crypto,portfolio,cash)
-        reward = sum(self.NUPL(portfolio,current))
+        current = self.get_full_obs()  ##TODO add curent price in order to compute NUPL
+        portfolio, action_per_crypto, cash = action
+        portfolio = self.update_agent_portfolio(current, action_per_crypto, portfolio, cash)
+        reward = sum(self.NUPL(portfolio, current))
         self.time += 1
 
         obs = self.get_obs()
-        
+
         if self.time != self.max_time:
-            self.reward_obs_term = (reward,(obs, current), False)
+            self.reward_obs_term = (reward, (obs, current), False)
         else:
             self.reward_obs_term = (reward, (obs, current), True)
         return self.reward_obs_term
