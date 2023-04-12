@@ -24,7 +24,7 @@ rl_glue.rl_start()
 
 
 
-num_steps = 1
+num_steps = 100
 
 total_nupl = []
 actions = np.zeros(3)

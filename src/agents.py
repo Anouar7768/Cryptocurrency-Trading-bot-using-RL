@@ -123,7 +123,6 @@ class Agent(BaseAgent):
         X = [self.model[key][self.time] for key in infos]
 
         prediction = np.array(X)
-        print("agent prediction", prediction)
 
         self.obs = obs
 
