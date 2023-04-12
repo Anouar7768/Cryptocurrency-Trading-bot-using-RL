@@ -5,7 +5,7 @@ from RLGlue.rl_glue import RLGlue
 
 from src.environment import Environment
 from src.agents import Agent
-
+import matplotlib.pyplot as plt
 
 data = pd.read_csv("./data/all_data.csv").to_dict() # full data with price and sentiment
 num_obs = max([k for k in data['Date'].keys()])
@@ -25,7 +25,6 @@ rl_glue.rl_start()
 
 
 num_steps = 100
-
 total_nupl = []
 actions = np.zeros(3)
 for i in range(num_steps):
