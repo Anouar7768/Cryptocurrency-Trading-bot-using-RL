@@ -16,6 +16,7 @@ class Agent(BaseAgent):
         self.cash = agent_info['cash']  # total cash of the agent
         self.model = agent_info["model"]  # model for prediction
         self.crypto_name = agent_info['crypto']  # name of the considered crypto
+        self.time = 0
 
     def agent_start(self, observation):
         """The first method called when the experiment starts, called after
@@ -39,6 +40,7 @@ class Agent(BaseAgent):
         self.cash = self.cash / 4  # update cash
 
         self.action = [0, 0, 0]  # hold everything
+        self.time +=1
 
         return self.portfolio, self.action, self.cash / 4
 
@@ -70,7 +72,7 @@ class Agent(BaseAgent):
         for i, crypto in enumerate(self.crypto_name):  # compute the 3 possible portfolio
             NUPLs = []
             total = sum([nb for nb, value in self.portfolio[crypto]])  # nb of crypto
-            current = prediction[0][i]  # prediction for the crypto
+            current = prediction[i]  # prediction for the crypto
             possible_portfolio = self.get_possible_portfolio(crypto, current)
             for portfolio in possible_portfolio:
                 if total != 0:
@@ -116,13 +118,18 @@ class Agent(BaseAgent):
         self.update(market_values)
 
         ############ Prediction step ##########
-        X = np.copy(self.info_market) ##TODO adapt this code line depending on how the real prices are added to data
+        infos = ['BTC', 'BNB', 'ETH'] ##TODO add real prices of cryptos on the same row
 
-        prediction = X
+        X = [self.model[key][self.time] for key in infos]
+
+        prediction = np.array(X)
+        print("agent prediction", prediction)
 
         self.obs = obs
 
         self.action = self.get_action(prediction)
+
+        self.time +=1
 
         return self.portfolio, self.action, self.cash / 4
 

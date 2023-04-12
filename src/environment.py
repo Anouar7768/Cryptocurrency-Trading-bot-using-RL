@@ -46,7 +46,7 @@ class Environment(BaseEnvironment):
         self.max_time = env_info['max']
         self.data = env_info['data']
         local_observation = []
-        for _ in range(5):
+        for _ in range(32):
             local_observation += [self.get_full_obs()]
             self.time += 1
 
@@ -107,6 +107,7 @@ class Environment(BaseEnvironment):
                 and boolean indicating if it's terminal.
         """
         current = self.get_full_obs()  ##TODO add curent price in order to compute NUPL
+        print('current', current)
         portfolio, action_per_crypto, cash = action
         portfolio = self.update_agent_portfolio(current, action_per_crypto, portfolio, cash)
         reward = sum(self.NUPL(portfolio, current))

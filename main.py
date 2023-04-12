@@ -7,14 +7,14 @@ from src.environment import Environment
 from src.agents import Agent
 
 
-data = pd.read_csv("./data/all_data_with_sentiment.csv").to_dict() # full data with price and sentiment
+data = pd.read_csv("./data/all_data.csv").to_dict() # full data with price and sentiment
 num_obs = max([k for k in data['Date'].keys()])
 
 env = Environment
 agent = Agent
 
 env_info = {'max' : num_obs , 'data':data}
-agent_info = {'model' : "CNN-LSTM", 'cash':100000, 'crypto': ['BNB','BTC','ETH']}
+agent_info = {'model' : pd.read_csv("./data/all_data_with_sentiment.csv").to_dict(), 'cash':100000, 'crypto': ['BNB','BTC','ETH']}
 
 
 rl_glue = RLGlue(env, agent)  # Creates a new RLGlue experiment with the env and agent we chose 
@@ -22,7 +22,9 @@ rl_glue.rl_init(agent_info, env_info) # Pass RLGlue what it needs to initialize 
 rl_glue.rl_start() 
 
 
-num_steps = 100
+
+
+num_steps = 1
 
 total_nupl = []
 actions = np.zeros(3)
