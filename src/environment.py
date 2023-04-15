@@ -62,7 +62,7 @@ class Environment(BaseEnvironment):
         return self.reward_obs_term
 
     def NUPL(self, portfolio, current):
-        """Method to get NUPLS fro each crypto according to agent portfolio
+        """Method to get NUPLS for each crypto according to agent portfolio
         Args:
             portfolio : agent portfolio
             current : the current market value for each crypto
@@ -71,11 +71,19 @@ class Environment(BaseEnvironment):
         """
         NUPLs = []
         for i, crypto in enumerate(['BTC', 'BNB', 'ETH']):
+            #print("portfolio is ", portfolio)
+            #print("current is ", current)
             total = sum([nb for nb, value in portfolio[crypto]])
+            #print("total is ", total)
             if portfolio[crypto] != []:
-                NUPLs.append(sum([(current[i] - value) * nb for nb, value in portfolio[crypto]]) / total * current[i])
+                NUPLs.append(sum([(current[i] - value) * nb for nb, value in portfolio[crypto]]) / (total * current[i]))
             else:
                 NUPLs.append(0)
+            #print("compute values is ", NUPLs)
+        print("portfolio is ", portfolio)
+        print("current is ", current)
+        print("NUPLS : ", NUPLs)
+
         return NUPLs
 
     def update_agent_portfolio(self, market_values, action, portfolio, cash):
@@ -106,7 +114,7 @@ class Environment(BaseEnvironment):
             (float, state, Boolean): a tuple of the reward, state observation,
                 and boolean indicating if it's terminal.
         """
-        current = self.get_full_obs()  ##TODO add curent price in order to compute NUPL
+        current = self.get_full_obs()
         portfolio, action_per_crypto, cash = action
         portfolio = self.update_agent_portfolio(current, action_per_crypto, portfolio, cash)
         reward = sum(self.NUPL(portfolio, current))

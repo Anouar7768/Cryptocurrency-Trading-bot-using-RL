@@ -32,7 +32,7 @@ class Agent(BaseAgent):
         ### hold = 0, sell = 1, buy = 2
         self.info_market = info  # np array
         # Initiate the portfolio, buy for each crypto 1/4 of the total money amount
-        last_values = self.info_market[0, :]  ##TODO change this to get the real last values
+        last_values = self.info_market[-1, :]
         self.portfolio = {}
         for i, name in enumerate(self.crypto_name):
             self.portfolio[name] = [((self.cash / 4) / last_values[i], last_values[i])]  # (num crypto , purchase price)
@@ -54,6 +54,7 @@ class Agent(BaseAgent):
         """
 
         hold_portolio = self.portfolio[crypto].copy()  # just the same
+        print("cash amount is ", self.cash)
         if self.cash != 0:  # enough money to buy
             buy_portfolio = self.portfolio[crypto].copy() + [((self.cash / 3) / current, current)]
         else:
@@ -69,17 +70,24 @@ class Agent(BaseAgent):
             Action taken : a list of values 0,1 or 2 (hold, buy, sell)
         """
         action = []
+        print("prediction is", prediction)
         for i, crypto in enumerate(self.crypto_name):  # compute the 3 possible portfolio
             NUPLs = []
-            total = sum([nb for nb, value in self.portfolio[crypto]])  # nb of crypto
+            #total = sum([nb for nb, value in self.portfolio[crypto]])  # nb of crypto
             current = prediction[i]  # prediction for the crypto
             possible_portfolio = self.get_possible_portfolio(crypto, current)
-            for portfolio in possible_portfolio:
-                if total != 0:
-                    NUPLs.append(sum([(current - value) * nb for nb, value in portfolio]) / total * current)
+            total = [sum([nb for nb, value in portfolio]) for portfolio in possible_portfolio]  # nb of crypto
+            print("total is ", total)
+            print(f"possible portfolios for {crypto} are ", possible_portfolio)
+            for i, portfolio  in enumerate(possible_portfolio):
+                print()
+                if total[i] != 0:
+                    NUPLs.append(sum([(current - value) * nb for nb, value in portfolio]) / (total[i] * current))
                 else:
                     NUPLs.append(0)
+
             NUPLs.append(0)  # NUPL for sell
+            print(f"predicted NUPLS {crypto} ", NUPLs)
             if NUPLs == [0, 0, 0]:
                 action.append(1)  # force to buy
             else:
