@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 # Parameters to play with
 with_sentiment = True
 epsilon_greedy = True
-epsilon = 0.3
+epsilon = 0.05
 
 data = pd.read_csv("./data/all_data.csv").to_dict() # full data with price
 if with_sentiment:
@@ -26,11 +26,11 @@ env = Environment
 if epsilon_greedy:
         agent = EpsilonGreedyAgent
         agent_info = {'model': pd.read_csv("./data/all_data_with_sentiment.csv").to_dict(), 'cash': 100000,
-                      'crypto': ['BNB', 'BTC', 'ETH'], 'epsilon': epsilon}
+                      'crypto': ['BTC', 'BNB', 'ETH'], 'epsilon': epsilon}
 else:
         agent = GreedyAgent
         agent_info = {'model': pd.read_csv("./data/all_data_with_sentiment.csv").to_dict(), 'cash': 100000,
-                      'crypto': ['BNB', 'BTC', 'ETH']}
+                      'crypto': ['BTC', 'BNB', 'ETH']}
 
 
 env_info = {'max': num_obs, 'data': data}
@@ -43,8 +43,9 @@ rl_glue.rl_start()
 
 
 num_steps = 200
-date = predictions.Date[:num_steps]
 total_nupl = []
+date = np.array(predictions.Date)
+print(date)
 actions = np.zeros(3)
 for i in range(num_steps):
         reward, obs, action, done = rl_glue.rl_step()
@@ -59,7 +60,7 @@ for i in range(num_steps):
         if done:
                 break
 
-total_nupl_df = pd.DataFrame(np.hstack((np.array(date), total_nupl)))
+total_nupl_df = pd.DataFrame(total_nupl)
 
-total_nupl_df.to_csv(f"./data/NUPLS_sentiment_{with_sentiment}_epsilon_{epsilon_greedy}")
+total_nupl_df.to_csv(f"./data/NUPLS_sentiment_{with_sentiment}_epsilon_{epsilon_greedy}.csv", index=False)
 
