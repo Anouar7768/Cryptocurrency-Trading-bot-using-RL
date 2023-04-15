@@ -4,17 +4,37 @@ from sklearn.tree import DecisionTreeRegressor
 from RLGlue.rl_glue import RLGlue
 
 from src.environment import Environment
-from src.agents import Agent
+from src.agents import GreedyAgent, EpsilonGreedyAgent
 import matplotlib.pyplot as plt
 
-data = pd.read_csv("./data/all_data.csv").to_dict() # full data with price and sentiment
+# Parameters to play with
+with_sentiment = True
+epsilon_greedy = True
+epsilon = 0.3
+
+data = pd.read_csv("./data/all_data.csv").to_dict() # full data with price
+if with_sentiment:
+        predictions = pd.read_csv("./data/all_data_with_sentiment.csv")
+else:
+        predictions = pd.read_csv("./data/all_data_without_sentiment.csv")
+
 num_obs = max([k for k in data['Date'].keys()])
 
-env = Environment
-agent = Agent
 
-env_info = {'max' : num_obs , 'data':data}
-agent_info = {'model' : pd.read_csv("./data/all_data_with_sentiment.csv").to_dict(), 'cash':100000, 'crypto': ['BNB','BTC','ETH']}
+
+env = Environment
+if epsilon_greedy:
+        agent = EpsilonGreedyAgent
+        agent_info = {'model': pd.read_csv("./data/all_data_with_sentiment.csv").to_dict(), 'cash': 100000,
+                      'crypto': ['BNB', 'BTC', 'ETH'], 'epsilon': epsilon}
+else:
+        agent = GreedyAgent
+        agent_info = {'model': pd.read_csv("./data/all_data_with_sentiment.csv").to_dict(), 'cash': 100000,
+                      'crypto': ['BNB', 'BTC', 'ETH']}
+
+
+env_info = {'max': num_obs, 'data': data}
+
 
 
 rl_glue = RLGlue(env, agent)  # Creates a new RLGlue experiment with the env and agent we chose 
@@ -22,9 +42,8 @@ rl_glue.rl_init(agent_info, env_info) # Pass RLGlue what it needs to initialize 
 rl_glue.rl_start() 
 
 
-
-
-num_steps = 100
+num_steps = 200
+date = predictions.Date[:num_steps]
 total_nupl = []
 actions = np.zeros(3)
 for i in range(num_steps):
@@ -39,4 +58,8 @@ for i in range(num_steps):
         actions = np.vstack((actions,action[1]))
         if done:
                 break
+
+total_nupl_df = pd.DataFrame(np.hstack((np.array(date), total_nupl)))
+
+total_nupl_df.to_csv(f"./data/NUPLS_sentiment_{with_sentiment}_epsilon_{epsilon_greedy}")
 
